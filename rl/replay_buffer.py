@@ -26,10 +26,10 @@ class ReplayBuffer:
         """Append a single transition to the buffer.
 
         Args:
-            state: numpy array of shape (29, 29).
+            state: numpy array of shape (2, grid_size, grid_size).
             action: int in [0, 3].
             reward: float reward signal.
-            next_state: numpy array of shape (29, 29).
+            next_state: numpy array of shape (2, grid_size, grid_size).
             done: bool indicating episode termination.
         """
         self.memory.append((state, action, reward, next_state, done))
@@ -42,10 +42,10 @@ class ReplayBuffer:
 
         Returns:
             Tuple of (states, actions, rewards, next_states, dones) as tensors.
-              - states:      float32, shape (batch_size, 29, 29)
+              - states:      float32, shape (batch_size, 2, grid_size, grid_size)
               - actions:     long,    shape (batch_size,)
               - rewards:     float32, shape (batch_size,)
-              - next_states: float32, shape (batch_size, 29, 29)
+              - next_states: float32, shape (batch_size, 2, grid_size, grid_size)
               - dones:       float32, shape (batch_size,)
         """
         batch = random.sample(self.memory, batch_size)
@@ -68,10 +68,10 @@ if __name__ == "__main__":
     buf = ReplayBuffer(capacity=100)
 
     for _ in range(10):
-        s = np.random.rand(29, 29).astype(np.float32)
+        s = np.random.rand(2, 15, 15).astype(np.float32)
         a = random.randint(0, 3)
         r = random.uniform(-1.0, 1.0)
-        s_next = np.random.rand(29, 29).astype(np.float32)
+        s_next = np.random.rand(2, 15, 15).astype(np.float32)
         d = random.choice([True, False])
         buf.push(s, a, r, s_next, d)
 

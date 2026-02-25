@@ -17,7 +17,6 @@ class DQNAgent:
 
     def __init__(
         self,
-        state_dim=225,
         action_dim=4,
         lr=1e-3,
         gamma=0.99,
@@ -29,10 +28,16 @@ class DQNAgent:
         target_update_freq=1000,
     ):
         """Initialise networks, optimizer, replay buffer, and hyperparameters."""
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        if torch.backends.mps.is_available():
+            self.device = torch.device("mps")
+        elif torch.cuda.is_available():
+            self.device = torch.device("cuda")
+        else:
+            self.device = torch.device("cpu")
+        print(f"Using device: {self.device}")
 
-        self.policy_net = DQN(state_dim, action_dim).to(self.device)
-        self.target_net = DQN(state_dim, action_dim).to(self.device)
+        self.policy_net = DQN(action_dim).to(self.device)
+        self.target_net = DQN(action_dim).to(self.device)
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.target_net.eval()
 
@@ -78,6 +83,11 @@ class DQNAgent:
         rewards = rewards.to(self.device)
         next_states = next_states.to(self.device)
         dones = dones.to(self.device)
+
+        if not hasattr(self, '_shape_printed'):
+            print(f"[DEBUG train_step] states.shape={states.shape}, "
+                  f"next_states.shape={next_states.shape}")
+            self._shape_printed = True
 
         q_values = self.policy_net(states)
         current_q = q_values.gather(1, actions.unsqueeze(1)).squeeze(1)

@@ -98,14 +98,35 @@ class SnakeEnv:
 
         return self.get_state(), reward, False
 
+    _state_printed = False
+
     def get_state(self):
-        """Return the board as a numpy array: 0=empty, 1=snake, 2=food."""
-        state = np.zeros((self.grid_size, self.grid_size), dtype=np.float32)
+        """Return a 3-channel spatial grid: channel 0 = snake, channel 1 = food."""
+        state = np.zeros((2, self.grid_size, self.grid_size), dtype=np.float32)
+
         for r, c in self.snake:
             if 0 <= r < self.grid_size and 0 <= c < self.grid_size:
-                state[r, c] = 1.0
+                state[0, r, c] = 1.0
+
         if self.food is not None:
-            state[self.food[0], self.food[1]] = 2.0
+            state[1, self.food[0], self.food[1]] = 1.0
+
+        assert state.shape == (2, self.grid_size, self.grid_size), (
+            f"State shape mismatch: {state.shape}"
+        )
+        assert state[1].sum() == 1.0, (
+            f"Food channel sum should be 1.0, got {state[1].sum()}"
+        )
+        assert state[0].sum() == len(self.snake), (
+            f"Snake channel sum should be {len(self.snake)}, got {state[0].sum()}"
+        )
+
+        if not SnakeEnv._state_printed:
+            print(f"[DEBUG get_state] shape={state.shape}, "
+                  f"snake_channel_sum={state[0].sum()}, "
+                  f"food_channel_sum={state[1].sum()}")
+            SnakeEnv._state_printed = True
+
         return state
 
 

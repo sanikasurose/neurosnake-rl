@@ -1,9 +1,12 @@
+import os
 import numpy as np
 import torch
 import matplotlib.pyplot as plt
 
 from snake_env import SnakeEnv
 from rl.agent import DQNAgent
+
+PLOT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "plots")
 
 
 def train(
@@ -54,12 +57,14 @@ def train(
                 f"Epsilon: {agent.epsilon:.3f}"
             )
 
+    os.makedirs(PLOT_DIR, exist_ok=True)
+
     plt.figure()
     plt.plot(episode_rewards)
     plt.xlabel("Episode")
     plt.ylabel("Total Reward")
     plt.title("Reward vs Episode")
-    plt.savefig("reward_plot.png")
+    plt.savefig(os.path.join(PLOT_DIR, "reward_plot.png"))
     plt.close()
 
     plt.figure()
@@ -67,7 +72,7 @@ def train(
     plt.xlabel("Episode")
     plt.ylabel("Epsilon")
     plt.title("Epsilon Decay")
-    plt.savefig("epsilon_plot.png")
+    plt.savefig(os.path.join(PLOT_DIR, "epsilon_plot.png"))
     plt.close()
 
     moving_avg = np.convolve(episode_rewards, np.ones(50) / 50, mode='valid')
@@ -76,7 +81,7 @@ def train(
     plt.xlabel("Episode")
     plt.ylabel("Moving Avg Reward (50)")
     plt.title("Smoothed Reward Curve")
-    plt.savefig("reward_smoothed.png")
+    plt.savefig(os.path.join(PLOT_DIR, "reward_smoothed.png"))
     plt.close()
 
     if save_model:
@@ -85,4 +90,4 @@ def train(
 
 
 if __name__ == "__main__":
-    train(num_episodes=5000)
+    train(num_episodes=250)
