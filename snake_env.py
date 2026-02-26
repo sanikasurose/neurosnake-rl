@@ -1,3 +1,5 @@
+from collections import deque
+
 import numpy as np
 import random
 
@@ -25,13 +27,15 @@ class SnakeEnv:
     Positions are (row, col) tuples.  Actions: 0=up, 1=down, 2=left, 3=right.
     """
 
-    def __init__(self, grid_size=GRID_SIZE):
+    def __init__(self, grid_size=GRID_SIZE, stack_size=1):
         self.grid_size = grid_size
         self.snake = []
         self.direction = RIGHT
         self.food = None
         self.score = 0
         self.done = False
+        self.stack_size = stack_size
+        self.frame_stack = deque(maxlen=self.stack_size)
 
     def reset(self):
         mid = self.grid_size // 2
@@ -41,7 +45,12 @@ class SnakeEnv:
         self._place_food()
         self.score = 0
         self.done = False
-        return self.get_state()
+
+        state = self.get_state()
+        self.frame_stack.clear()
+        for _ in range(self.stack_size):
+            self.frame_stack.append(state)
+        return np.concatenate(self.frame_stack, axis=0)
 
     def _place_food(self):
         occupied = set(self.snake)
@@ -56,9 +65,15 @@ class SnakeEnv:
         else:
             self.food = None
 
+    def _stacked_obs(self):
+        """Get the raw state, push it onto the frame stack, return stacked."""
+        state = self.get_state()
+        self.frame_stack.append(state)
+        return np.concatenate(self.frame_stack, axis=0)
+
     def step(self, action):
         if self.done:
-            return self.get_state(), 0.0, True
+            return self._stacked_obs(), 0.0, True
 
         if action in DIRECTIONS and OPPOSITE.get(action) != self.direction:
             self.direction = action
@@ -73,11 +88,11 @@ class SnakeEnv:
         if not (0 <= new_head[0] < self.grid_size
                 and 0 <= new_head[1] < self.grid_size):
             self.done = True
-            return self.get_state(), -10.0, True
+            return self._stacked_obs(), -10.0, True
 
         if new_head in self.snake[:-1]:
             self.done = True
-            return self.get_state(), -10.0, True
+            return self._stacked_obs(), -10.0, True
 
         self.snake.insert(0, new_head)
 
@@ -96,7 +111,7 @@ class SnakeEnv:
         else:
             self.snake.pop()
 
-        return self.get_state(), reward, False
+        return self._stacked_obs(), reward, False
 
     _state_printed = False
 

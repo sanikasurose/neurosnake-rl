@@ -5,22 +5,22 @@ import torch.nn as nn
 
 
 class DQN(nn.Module):
-    """CNN that maps a (batch, 2, 15, 15) spatial observation to Q-values
+    """CNN that maps a (batch, C, 15, 15) spatial observation to Q-values
     for each of the 4 movement actions (up, down, left, right).
     """
 
-    def __init__(self, action_dim: int = 4) -> None:
+    def __init__(self, action_dim: int = 4, input_channels: int = 2) -> None:
         super().__init__()
 
         self.conv = nn.Sequential(
-            nn.Conv2d(in_channels=2, out_channels=32, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(in_channels=input_channels, out_channels=32, kernel_size=3, stride=1, padding=1),
             nn.ReLU(),
             nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1),
             nn.ReLU(),
         )
 
         with torch.no_grad():
-            dummy = torch.zeros(1, 2, 15, 15)
+            dummy = torch.zeros(1, input_channels, 15, 15)
             conv_out = self.conv(dummy)
             self.flattened_size = conv_out.view(1, -1).size(1)
 

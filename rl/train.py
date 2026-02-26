@@ -1,4 +1,6 @@
+import csv
 import os
+
 import numpy as np
 import torch
 import matplotlib.pyplot as plt
@@ -6,21 +8,29 @@ import matplotlib.pyplot as plt
 from snake_env import SnakeEnv
 from rl.agent import DQNAgent
 
-PLOT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "plots")
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PLOT_DIR = os.path.join(_PROJECT_ROOT, "plots")
+MODELS_DIR = os.path.join(_PROJECT_ROOT, "models")
 
 
 def train(
     num_episodes=5000,
     max_steps_per_episode=1000,
+    stack_size=4,
     save_model=True,
     model_path="dqn_snake.pth",
 ):
-    env = SnakeEnv()
-    agent = DQNAgent()
+    env = SnakeEnv(stack_size=stack_size)
+    agent = DQNAgent(stack_size=stack_size)
 
     episode_rewards = []
-    episode_scores = []
+    scores = []
+    rolling_avg_scores = []
     all_epsilons = []
+    best_score = 0
+    breakthrough_saved = False
+
+    os.makedirs(MODELS_DIR, exist_ok=True)
 
     for episode in range(num_episodes):
         state = env.reset()
@@ -39,24 +49,40 @@ def train(
                 break
 
         episode_rewards.append(total_reward)
-        episode_scores.append(env.score)
+        score = env.score
+        scores.append(score)
 
-        # Decay epsilon once per episode
         agent.epsilon = max(
             agent.epsilon_min,
             agent.epsilon * agent.epsilon_decay
         )
         all_epsilons.append(agent.epsilon)
 
+        if len(scores) >= 100:
+            rolling_avg = sum(scores[-100:]) / 100
+        else:
+            rolling_avg = sum(scores) / len(scores)
+        rolling_avg_scores.append(rolling_avg)
+
+        if score > best_score:
+            best_score = score
+            print(f"New Best Score: {best_score}")
+
+        if not breakthrough_saved and rolling_avg >= 10:
+            path = os.path.join(MODELS_DIR, "frame_stack_breakthrough.pth")
+            torch.save(agent.policy_net.state_dict(), path)
+            print(f"Model saved — achieved rolling avg >= 10 ({path})")
+            breakthrough_saved = True
+
         if episode % 50 == 0:
-            avg_reward = np.mean(episode_rewards[-50:])
             print(
                 f"Episode {episode} | "
-                f"Score: {env.score} | "
-                f"Avg Reward (last 50): {avg_reward:.2f} | "
+                f"Score: {score} | "
+                f"Rolling Avg (100): {rolling_avg:.2f} | "
                 f"Epsilon: {agent.epsilon:.3f}"
             )
 
+    # ---- plots ----
     os.makedirs(PLOT_DIR, exist_ok=True)
 
     plt.figure()
@@ -84,10 +110,19 @@ def train(
     plt.savefig(os.path.join(PLOT_DIR, "reward_smoothed.png"))
     plt.close()
 
+    # ---- CSV log ----
+    csv_path = os.path.join(_PROJECT_ROOT, "training_log_phase2.csv")
+    with open(csv_path, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["Episode", "Score", "RollingAvg"])
+        for i in range(len(scores)):
+            writer.writerow([i, scores[i], rolling_avg_scores[i]])
+    print(f"Training log saved to {csv_path}")
+
     if save_model:
         torch.save(agent.policy_net.state_dict(), model_path)
         print(f"Model saved to {model_path}")
 
 
 if __name__ == "__main__":
-    train(num_episodes=250)
+    train(num_episodes=2000)

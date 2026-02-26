@@ -26,6 +26,7 @@ class DQNAgent:
         epsilon_end=0.05,
         epsilon_decay=0.995,
         target_update_freq=1000,
+        stack_size=1,
     ):
         """Initialise networks, optimizer, replay buffer, and hyperparameters."""
         if torch.backends.mps.is_available():
@@ -36,8 +37,10 @@ class DQNAgent:
             self.device = torch.device("cpu")
         print(f"Using device: {self.device}")
 
-        self.policy_net = DQN(action_dim).to(self.device)
-        self.target_net = DQN(action_dim).to(self.device)
+        self.stack_size = stack_size
+        input_channels = 2 * self.stack_size
+        self.policy_net = DQN(action_dim, input_channels=input_channels).to(self.device)
+        self.target_net = DQN(action_dim, input_channels=input_channels).to(self.device)
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.target_net.eval()
 
