@@ -18,15 +18,16 @@ class DQNAgent:
     def __init__(
         self,
         action_dim=4,
-        lr=1e-3,
+        lr=3e-4,
         gamma=0.99,
-        buffer_capacity=100_000,
-        batch_size=64,
+        buffer_capacity=50_000,
+        batch_size=128,
         epsilon_start=1.0,
         epsilon_end=0.05,
-        epsilon_decay=0.995,
+        epsilon_decay_steps=30_000,
         target_update_freq=1000,
         stack_size=1,
+        tau=0.01,
     ):
         """Initialise networks, optimizer, replay buffer, and hyperparameters."""
         if torch.backends.mps.is_available():
@@ -44,16 +45,25 @@ class DQNAgent:
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.target_net.eval()
 
-        self.optimizer = optim.Adam(self.policy_net.parameters(), lr=lr)
+        self.optimizer = optim.Adam(
+            self.policy_net.parameters(),
+            lr=lr,
+            betas=(0.9, 0.999),
+            eps=1e-8,
+            weight_decay=1e-5,
+        )
+        self.criterion = nn.SmoothL1Loss()
 
         self.memory = ReplayBuffer(buffer_capacity)
 
         self.gamma = gamma
         self.batch_size = batch_size
-        self.epsilon = epsilon_start
+        self.epsilon_start = epsilon_start
         self.epsilon_min = epsilon_end
-        self.epsilon_decay = epsilon_decay
+        self.epsilon_decay_steps = epsilon_decay_steps
+        self.epsilon = epsilon_start
         self.target_update_freq = target_update_freq
+        self.tau = tau
         self.steps_done = 0
         self.action_dim = action_dim
 
@@ -96,18 +106,39 @@ class DQNAgent:
         current_q = q_values.gather(1, actions.unsqueeze(1)).squeeze(1)
 
         with torch.no_grad():
-            next_q_values = self.target_net(next_states)
-            max_next_q = next_q_values.max(1)[0]
-            target_q = rewards + self.gamma * max_next_q * (1 - dones)
+            next_actions = self.policy_net(next_states).argmax(dim=1, keepdim=True)
+            next_q_values_target = self.target_net(next_states)
+            next_q = next_q_values_target.gather(1, next_actions).squeeze(1)
+            target_q = rewards + self.gamma * next_q * (1 - dones)
 
-        loss = nn.MSELoss()(current_q, target_q)
+        loss = self.criterion(current_q, target_q)
 
         self.optimizer.zero_grad()
         loss.backward()
+        torch.nn.utils.clip_grad_norm_(self.policy_net.parameters(), max_norm=10.0)
         self.optimizer.step()
 
-        self.steps_done += 1
-        if self.steps_done % self.target_update_freq == 0:
-            self.target_net.load_state_dict(self.policy_net.state_dict())
+        # Soft update of target network (Polyak averaging)
+        for target_param, policy_param in zip(
+            self.target_net.parameters(), self.policy_net.parameters()
+        ):
+            target_param.data.copy_(
+                self.tau * policy_param.data + (1.0 - self.tau) * target_param.data
+            )
 
-        return loss.item()
+        self.steps_done += 1
+
+        # Linear epsilon decay based on total training steps
+        fraction = min(1.0, self.steps_done / self.epsilon_decay_steps)
+        self.epsilon = self.epsilon_start - fraction * (
+            self.epsilon_start - self.epsilon_min
+        )
+
+        mean_q = current_q.mean().item()
+        mean_target_q = target_q.mean().item()
+
+        return {
+            "loss": loss.item(),
+            "mean_q": mean_q,
+            "mean_target_q": mean_target_q,
+        }
