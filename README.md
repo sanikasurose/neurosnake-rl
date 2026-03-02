@@ -1,123 +1,65 @@
-# 🐍 neurosnake-rl — From Turtle Game to Deep Reinforcement Learning
+# 🐍 neurosnake-rl - From Snake Game to Deep RL + Analytics Platform
 
-This project began as a simple implementation of the classic Snake game using Python’s Turtle graphics. It has since evolved into a fully autonomous deep reinforcement learning system where a Deep Q-Network (DQN) agent learns to play the game from raw grid observations.
+This project began as a simple implementation of the classic Snake game using Python’s Turtle graphics. It has since evolved into a fully autonomous Deep Reinforcement Learning system, and now into a structured experiment tracking and analytics platform.
 
-This repository documents that progression — from deterministic game logic to convolutional neural networks with temporal awareness and stabilized value learning.
+What started as a simple game is now:
+
+- A Deep Q-Network (DQN) implemented from scratch in PyTorch
+- A convolutional architecture for spatial reasoning over grid states
+- Frame stacking for temporal awareness and directional inference
+- A Double DQN implementation to reduce Q-value overestimation
+- Target network stabilization and replay buffer training
+- A reproducible experiment tracking and analytics framework
+
+This repository documents that progression; from deterministic game logic to stabilized deep value learning with analytical validation.
 
 ---
 
-# 🚀 Current Release: v0.4.0 — CNN + Frame Stacking + Double DQN
+# 🚀 Current Release: v0.5.0 — RL + Experiment Tracking + Analytics
 
-Version 0.4.0 introduces architectural stabilization and full training convergence.
+Version 0.5.0 introduces structured experiment logging and analytical validation on top of the RL system.
 
-## 🔧 Major Upgrades
+This transforms the project from “just training a model” into a reproducible, analyzable ML experiment framework.
+
+---
+
+# 🧠 Reinforcement Learning System (v0.4 Core)
+
+## Major Architectural Features
 
 - ✅ Convolutional Neural Network (CNN) for spatial reasoning  
 - ✅ Frame stacking for temporal awareness  
-- ✅ **Double DQN** (reduced Q-value overestimation)  
+- ✅ Double DQN (reduced Q-value overestimation)  
 - ✅ Target network stabilization  
 - ✅ Replay buffer (50,000 capacity)  
 - ✅ GPU-accelerated training (PyTorch + Apple MPS)  
 - ✅ Rolling-average performance tracking  
-- ✅ Structured training logs saved to CSV  
-- ✅ Stable 4000-episode convergence run  
-
-This version focuses on **numerical stability, value correction, and controlled convergence** rather than raw score spikes.
+- ✅ Structured training logs  
 
 ---
 
-# 📈 Performance Evolution
+## 📈 Performance Evolution
 
-## v0.2.0 — MLP DQN
+### v0.2.0 — MLP DQN
 - Plateaued at score **2–3**
 - No spatial modeling
 - Limited policy improvement
 
-## v0.3.0 — CNN + Frame Stacking
-- Major spatial upgrade
+### v0.3.0 — CNN + Frame Stacking
+- Broke architectural ceiling
 - Strong performance spikes
 - Improved survival behavior
-- Demonstrated architectural ceiling break
 
-## 🆕 v0.4.0 — CNN + Frame Stacking + Double DQN
+### v0.4.0 — CNN + Frame Stacking + Double DQN
 - 4000 training episodes
 - Stable rolling average: **~2.4–2.7**
 - Best score: **11**
 - No Q-value divergence
-- Stable loss (~0.25–0.32 late-stage)
-- Fully converged training curve
+- Stable late-stage loss (~0.25–0.32)
 
 This version emphasizes **correct learning dynamics over inflated Q-values**.
 
-Unlike earlier versions, Q-values remain bounded and consistent with target estimates throughout training.
-
----
-
-# 🧠 How the Agent Works
-
-At its core, this project is applied mathematics.
-
-There is no handcrafted strategy — only:
-
-- Function approximation  
-- Optimization  
-- Linear algebra  
-- Probability  
-- Gradient descent  
-
-The agent approximates:
-
-Q(s, a) ≈ expected future reward
-
-Where:
-- `s` = stacked grid state (8-channel input)
-- `a` = action (up, down, left, right)
-- `Q` = long-term expected value
-
----
-
-Neural network pipeline: 
-
-state → CNN → fully connected layers → Q-values
-
-Training minimizes the Bellman error: 
-
-Loss = (Q_predicted − Q_target)²
-
-With **Double DQN target computation**:
-
-Q_target = r + γ * Q_target(s', argmax_a Q_online(s', a))
-
-This reduces value overestimation and stabilizes learning.
-
----
-
-# 🧬 Why CNN + Frame Stacking + Double DQN Matters
-
-## 🧱 CNN — Spatial Awareness
-
-Flattening a grid destroys structure.
-
-A CNN preserves:
-- Local adjacency  
-- Body formations  
-- Corridor geometry  
-- Trap detection  
-
-Spatial problems require spatial models.
-
----
-
-## ⏳ Frame Stacking — Temporal Awareness
-
-Multiple consecutive frames allow:
-
-- Direction inference  
-- Momentum awareness  
-- Collision prediction  
-- Reduced self-trapping  
-
-Without temporal context, the agent cannot infer movement direction.
+Q-values remain bounded and consistent with target estimates throughout training.
 
 ---
 
@@ -135,52 +77,140 @@ Each episode:
 8. Update online network  
 9. Periodically update target network  
 
-Learning emerges from thousands of gradient steps across diverse replayed experiences.
+Training minimizes the Bellman error:
+
+Loss = (Q_predicted − Q_target)²
+
+With Double DQN target computation:
+
+Q_target = r + γ * Q_target(s', argmax_a Q_online(s', a))
 
 ---
 
-# 📊 Training Results (v0.4.0)
+# 🗄 v0.5 — Structured Experiment Tracking
 
-- 4000 training episodes
-- GPU-accelerated (Apple MPS)
-- Replay buffer capacity: 50,000
-- Batch size: 128
-- Learning rate: 3e-4
-- Stable convergence
+Training runs are now stored in a relational SQLite database:
 
-### Observed Training Phases
+`training.db`
 
-1. Early exploration instability (episodes 0–800)
-2. Q-value stabilization (~1000 episodes)
-3. Policy improvement (1200–2500)
-4. Controlled convergence plateau (~2.5 rolling avg)
+## Database Design
 
-The agent demonstrates:
-- Consistent survival behavior
-- Multi-food chaining
-- Reduced early suicide
-- Clear learned policy patterns
+### experiments
+- experiment_id
+- model_version
+- created_at
+- notes
 
-This version represents a **fully stabilized deep RL system**, not just a performance spike.
+### hyperparameters
+- experiment_id (FK)
+- learning_rate
+- gamma
+- batch_size
+- epsilon_decay
+- etc.
+
+### episodes
+- episode_id
+- experiment_id (FK)
+- episode_number
+- score
+- avg_loss
+
+This enables:
+
+- Reproducibility
+- Cross-experiment comparison
+- Hyperparameter impact analysis
+- Convergence detection
+- Data validation
+
+---
+
+# 📊 SQL Analytics Layer
+
+The project now includes structured analytical queries:
+
+`analytics/queries.sql`
+
+Implemented concepts:
+
+- SELECT
+- JOIN
+- GROUP BY
+- HAVING
+- Aggregations
+- Window functions (rolling averages)
+
+Example analyses:
+
+- Average score by learning rate
+- Best performing experiment
+- Underperforming run detection
+- Rolling 10-episode moving averages
+- Convergence episode detection
+
+---
+
+# 🧪 analyze.py — Data Profiling & Validation Layer
+
+`analytics/analyze.py` executes structured analytics directly against the database.
+
+It performs:
+
+## Dataset Profiling
+- Total experiments
+- Total episodes
+- Score distributions
+- Average episodes per experiment
+
+## Performance Summary
+- KPI reporting per experiment
+- Best-performing run detection
+- Hyperparameter comparisons
+
+## Convergence Detection
+- Window-function-based rolling average tracking
+- Threshold-based convergence identification
+
+## Data Integrity Checks
+- NULL detection
+- Orphaned records
+- Duplicate episode numbers
+- Experiments with zero episodes
+
+This simulates a lightweight analytics engineering workflow:
+
+- SQL validation
+- KPI reporting
+- Data quality checks
+- Structured reporting
+
+The project now resembles a mini data platform layered on top of an ML system.
 
 ---
 
 # 📦 Libraries Used
 
-## 🐍 Python
-Core language for the entire system.
+## Python
+Core language.
 
-## 🔢 NumPy
+## NumPy
 Grid representation and numerical operations.
 
-## 🔥 PyTorch
+## PyTorch
 - CNN architecture
 - Automatic differentiation
 - Adam optimizer
 - MPS GPU backend
 
-## 🐢 Turtle (v0.1)
-Original rendering engine used for manual Snake implementation.
+## SQLite
+- Structured experiment tracking
+- Relational schema design
+- Analytical querying
+- Data validation
+
+## Turtle (v0.1)
+Original rendering engine.
 
 ---
 
@@ -189,7 +219,8 @@ Original rendering engine used for manual Snake implementation.
 - **v0.1** — Manual Snake (Turtle)
 - **v0.2** — Basic MLP DQN
 - **v0.3** — CNN + Frame Stacking
-- **v0.4** — CNN + Frame Stacking + Double DQN (Stable Convergence)
+- **v0.4** — CNN + Frame Stacking + Double DQN
+- **v0.5** — Experiment Database + SQL Analytics + Data Validation
 
 ---
 
@@ -197,12 +228,19 @@ Original rendering engine used for manual Snake implementation.
 
 This project demonstrates:
 
-- Turning a deterministic game into a learning environment
 - Implementing DQN and Double DQN from scratch
-- Understanding how architecture impacts behavior
-- Diagnosing instability in value learning
-- Scaling experiments through structured iteration
+- Understanding architectural stabilization
+- Designing a relational schema for ML experiments
+- Writing analytical SQL with window functions
+- Performing data profiling and validation
+- Structuring experiments for reproducibility
 
-This is not about building a perfect Snake AI.
+It evolved from a simple game to:
 
-It’s about understanding how learning systems emerge from mathematics — and how architectural decisions shape behavior.
+- Applied reinforcement learning
+- Experiment tracking infrastructure
+- Analytical SQL practice
+- Data validation engineering
+
+It bridges machine learning and data engineering by turning a learning system into a measurable, analyzable platform.
+

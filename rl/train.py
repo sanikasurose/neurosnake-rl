@@ -1,4 +1,3 @@
-import csv
 import os
 
 import numpy as np
@@ -7,6 +6,7 @@ import matplotlib.pyplot as plt
 
 from snake_env import SnakeEnv
 from rl.agent import DQNAgent
+from analytics.db import create_experiment, log_episode, end_experiment
 
 _PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PLOT_DIR = os.path.join(_PROJECT_ROOT, "plots")
@@ -22,6 +22,15 @@ def train(
 ):
     env = SnakeEnv(stack_size=stack_size)
     agent = DQNAgent(stack_size=stack_size)
+
+    experiment_id = create_experiment(
+        model_version="v0.5.0",
+        learning_rate=agent.optimizer.param_groups[0]["lr"],
+        gamma=agent.gamma,
+        epsilon_start=agent.epsilon_start,
+        epsilon_decay=agent.epsilon_decay_steps,
+        batch_size=agent.batch_size,
+    )
 
     episode_rewards = []
     scores = []
@@ -112,6 +121,19 @@ def train(
             if abs(avg_q - avg_target_q) > 10:
                 print("⚠ WARNING: Q/Target divergence detected")
 
+        log_episode(
+            experiment_id=experiment_id,
+            episode_number=episode,
+            score=score,
+            total_reward=total_reward,
+            avg_loss=avg_loss,
+            epsilon=agent.epsilon,
+            mean_q=avg_q,
+            mean_target_q=avg_target_q,
+        )
+
+    end_experiment(experiment_id)
+
     # ---- plots ----
     os.makedirs(PLOT_DIR, exist_ok=True)
 
@@ -139,22 +161,6 @@ def train(
     plt.title("Smoothed Reward Curve")
     plt.savefig(os.path.join(PLOT_DIR, "reward_smoothed.png"))
     plt.close()
-
-    # ---- CSV log ----
-    csv_path = os.path.join(_PROJECT_ROOT, "training_log_phase2.csv")
-    with open(csv_path, "w", newline="") as f:
-        writer = csv.writer(f)
-        writer.writerow(["Episode", "Score", "RollingAvg", "Loss", "MeanQ", "MeanTargetQ"])
-        for i in range(len(scores)):
-            writer.writerow([
-                i,
-                scores[i],
-                rolling_avg_scores[i],
-                all_losses[i],
-                all_mean_qs[i],
-                all_mean_target_qs[i],
-            ])
-    print(f"Training log saved to {csv_path}")
 
     if save_model:
         torch.save(agent.policy_net.state_dict(), model_path)
