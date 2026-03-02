@@ -15,5 +15,8 @@ models/
 # Training logs
 training_log_*.csv
 
+# SQLite databases
+*.db
+
 # Virtual Environment
 .venv/
