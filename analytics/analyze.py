@@ -1,6 +1,4 @@
-import sqlite3
-
-from analytics.db import DB_FILE
+from analytics.db import _connect
 
 SEPARATOR = "=" * 50
 
@@ -278,8 +276,7 @@ def run_data_integrity_checks(conn):
 # ---------------------------------------------------------------------------
 
 def main():
-    conn = sqlite3.connect(DB_FILE)
-    conn.execute("PRAGMA foreign_keys = ON;")
+    conn = _connect()
 
     try:
         profile_dataset(conn)

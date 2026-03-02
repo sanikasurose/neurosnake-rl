@@ -168,4 +168,4 @@ def train(
 
 
 if __name__ == "__main__":
-    train(num_episodes=4000)
+    train(num_episodes=5000)
