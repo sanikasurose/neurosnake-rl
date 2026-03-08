@@ -3,11 +3,16 @@ import tkinter
 import turtle
 from turtle import Screen, Turtle
 
-from snake_env import SnakeEnv, UP, DOWN, LEFT, RIGHT
+from snake_env import SnakeEnv, UP, DOWN, LEFT, RIGHT, GRID_SIZE
 from score import Scoreboard
 
-CELL_SIZE = 20
-GRID_CENTER = 7
+CELL_SIZE = 40
+GRID_CENTER = GRID_SIZE // 2
+
+BASE_DELAY = 0.15
+MIN_DELAY = 0.05
+SPEED_STEP = 0.01
+FOOD_PER_SPEEDUP = 3
 
 
 def grid_to_pixel(row, col):
@@ -16,12 +21,33 @@ def grid_to_pixel(row, col):
     return x, y
 
 
+def get_step_delay(score):
+    reductions = score // FOOD_PER_SPEEDUP
+    return max(MIN_DELAY, BASE_DELAY - reductions * SPEED_STEP)
+
+
 # ── Screen setup ──────────────────────────────────────────
+WINDOW_W = GRID_SIZE * CELL_SIZE + 20
+WINDOW_H = GRID_SIZE * CELL_SIZE + 80
 screen = Screen()
-screen.setup(width=600, height=600)
+screen.setup(width=WINDOW_W, height=WINDOW_H)
 screen.bgcolor("black")
 screen.title("Funky Snake Game")
 screen.tracer(0)
+
+# ── Draw visible border around the grid ──────────────────
+border = Turtle()
+border.hideturtle()
+border.penup()
+border.color("grey")
+border.pensize(2)
+half = GRID_SIZE * CELL_SIZE / 2
+border.goto(-half, half)
+border.pendown()
+for _ in range(4):
+    border.forward(GRID_SIZE * CELL_SIZE)
+    border.right(90)
+border.penup()
 
 # ── Game logic (headless environment) ─────────────────────
 env = SnakeEnv()
@@ -33,18 +59,22 @@ score = Scoreboard()
 snake_turtles = []
 
 
+SHAPE_SCALE = CELL_SIZE / 20
+
+
 def _get_segment_turtle(index):
     while index >= len(snake_turtles):
         t = Turtle(shape="square")
         t.color("white")
         t.penup()
+        t.shapesize(stretch_len=SHAPE_SCALE, stretch_wid=SHAPE_SCALE)
         snake_turtles.append(t)
     return snake_turtles[index]
 
 
 food_turtle = Turtle(shape="circle")
 food_turtle.penup()
-food_turtle.shapesize(stretch_len=0.5, stretch_wid=0.5)
+food_turtle.shapesize(stretch_len=SHAPE_SCALE * 0.5, stretch_wid=SHAPE_SCALE * 0.5)
 food_turtle.color("yellow")
 
 # ── Input handling ────────────────────────────────────────
@@ -101,10 +131,11 @@ try:
     while True:
         _, _, done = env.step(pending_action)
         render()
-        time.sleep(0.05)
+        time.sleep(get_step_delay(env.score))
 
         if done:
             score.reset_scoreboard()
+            time.sleep(1)
             env.reset()
             pending_action = RIGHT
 except (tkinter.TclError, turtle.Terminator):
