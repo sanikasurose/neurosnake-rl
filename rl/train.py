@@ -6,7 +6,8 @@ import matplotlib.pyplot as plt
 
 from snake_env import SnakeEnv
 from rl.agent import DQNAgent
-from analytics.db import create_experiment, log_episode, end_experiment
+from analytics.db import init_db, create_experiment, log_episode, end_experiment
+import random
 
 _PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PLOT_DIR = os.path.join(_PROJECT_ROOT, "plots")
@@ -17,9 +18,14 @@ def train(
     num_episodes=5000,
     max_steps_per_episode=1000,
     stack_size=4,
-    save_model=True,
-    model_path="dqn_snake.pth",
+    seed=42,
 ):
+    init_db()
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+
+    random.seed(seed)
+
     env = SnakeEnv(stack_size=stack_size)
     agent = DQNAgent(stack_size=stack_size)
 
@@ -30,7 +36,12 @@ def train(
         epsilon_start=agent.epsilon_start,
         epsilon_decay=agent.epsilon_decay_steps,
         batch_size=agent.batch_size,
+        notes=f"seed={seed}"
     )
+    experiment_model_path = os.path.join(MODELS_DIR, f"exp_{experiment_id}_best.pth")
+    experiment_plot_dir = os.path.join(PLOT_DIR, f"exp_{experiment_id}")
+
+    os.makedirs(experiment_plot_dir, exist_ok=True)
 
     episode_rewards = []
     scores = []
@@ -98,7 +109,8 @@ def train(
 
         if score > best_score:
             best_score = score
-            print(f"New Best Score: {best_score}")
+            torch.save(agent.policy_net.state_dict(), experiment_model_path)
+            print(f"New Best Score: {best_score} — model saved to {experiment_model_path}")
 
         if not breakthrough_saved and rolling_avg >= 10:
             path = os.path.join(MODELS_DIR, "frame_stack_breakthrough.pth")
@@ -142,7 +154,7 @@ def train(
     plt.xlabel("Episode")
     plt.ylabel("Total Reward")
     plt.title("Reward vs Episode")
-    plt.savefig(os.path.join(PLOT_DIR, "reward_plot.png"))
+    plt.savefig(os.path.join(experiment_plot_dir, "reward_plot.png"))
     plt.close()
 
     plt.figure()
@@ -150,7 +162,7 @@ def train(
     plt.xlabel("Episode")
     plt.ylabel("Epsilon")
     plt.title("Epsilon Decay")
-    plt.savefig(os.path.join(PLOT_DIR, "epsilon_plot.png"))
+    plt.savefig(os.path.join(experiment_plot_dir, "epsilon_plot.png"))
     plt.close()
 
     moving_avg = np.convolve(episode_rewards, np.ones(50) / 50, mode='valid')
@@ -159,13 +171,9 @@ def train(
     plt.xlabel("Episode")
     plt.ylabel("Moving Avg Reward (50)")
     plt.title("Smoothed Reward Curve")
-    plt.savefig(os.path.join(PLOT_DIR, "reward_smoothed.png"))
+    plt.savefig(os.path.join(experiment_plot_dir, "reward_smoothed.png"))
     plt.close()
-
-    if save_model:
-        torch.save(agent.policy_net.state_dict(), model_path)
-        print(f"Model saved to {model_path}")
 
 
 if __name__ == "__main__":
-    train(num_episodes=5000)
+    train(num_episodes=1000)
