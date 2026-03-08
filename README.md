@@ -143,27 +143,6 @@ This allows **objective comparison between experiments**.
 
 ---
 
-# 📂 Project Structure
-
-snake-ai/
-│
-├── snake_env.py
-│
-├── rl/
-│ ├── agent.py
-│ ├── train.py
-│ ├── evaluate.py
-│ └── evaluate_all.py
-│
-├── analytics/
-│ └── db.py
-│
-├── models/
-├── plots/
-└── experiments.db
-
----
-
 # 🧭 Why I Built This
 
 Most reinforcement learning tutorials stop at **“the model trains.”**
