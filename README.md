@@ -10,7 +10,7 @@ The repository now functions as a **mini RL research lab**.
 
 ---
 
-# 🚀 Current Version - v1.0.0
+# Current Version - v1.0.0
 
 v1.0.0 marks the transition from **"training a model** to a **complete reinforcement learning experimentation pipeline**.
 
@@ -28,7 +28,7 @@ This makes it possible to **run, compare, and analyze RL experiments systematica
 
 ---
 
-# 🧠 Reinforcement Learning System
+# Reinforcement Learning System
 
 The agent uses a **Deep Q-Network (DQN)** architecture designed for grid-based spatial reasoning.
 
@@ -52,28 +52,28 @@ With Double DQN targets:
 
 ---
 
-# 🔬 RL Experiment Pipeline
+# RL Experiment Pipeline
 
 The project now implements a **complete RL research workflow**.
 
-`
-Train Agent
-↓
-Log Experiment (SQLite)
-↓
-Save Best Model Checkpoint
-↓
-Evaluate Models
-↓ 
-Rank Experiments (Leaderboard)
-↓
-Analyze Results
+
+Train Agent  
+↓  
+Log Experiment (SQLite)  
+↓  
+Save Best Model Checkpoint  
+↓  
+Evaluate Models  
+↓   
+Rank Experiments (Leaderboard)  
+↓  
+Analyze Results  
 
 This enables **systematic RL experimentation instead of ad-hoc training runs**.
 
 ---
 
-# 📊 Experiment Tracking & Analytics
+# Experiment Tracking & Analytics
 
 Experiments are stored in a **SQLite database**.
 
@@ -104,7 +104,7 @@ The analytics layer enables:
 
 ---
 
-# 🧪 Evaluation System
+# Evaluation System
 
 The repo includes a **deterministic evaluation framework**.
 
@@ -118,7 +118,7 @@ This allows **objective comparison between experiments**.
 
 ---
 
-# ⚙️ Tech Stack
+# Tech Stack
 
 **Core ML**
 
@@ -143,7 +143,7 @@ This allows **objective comparison between experiments**.
 
 ---
 
-# 🧭 Why I Built This
+# Why I Built This
 
 Most reinforcement learning tutorials stop at **“the model trains.”**
 
@@ -164,9 +164,7 @@ It bridges three areas:
 
 ---
 
-# 📚 What I Learned
-
-Building this project required understanding:
+# Learnings
 
 **Reinforcement Learning**
 - DQN and Double DQN
@@ -188,7 +186,7 @@ Building this project required understanding:
 
 ---
 
-# 🏷 Version History
+# Version History
 
 - **v0.1** — Snake game (Turtle)
 - **v0.2** — Basic MLP DQN
@@ -199,7 +197,7 @@ Building this project required understanding:
 
 ---
 
-# 🎯 Project Goal
+# Project Goal
 
 The goal of this repository is not just to build a working RL agent, but to demonstrate **how to structure reinforcement learning experiments like a research project**.
 
