@@ -8,6 +8,7 @@ from snake_env import SnakeEnv
 from rl.agent import DQNAgent
 from analytics.db import init_db, create_experiment, log_episode, end_experiment
 import random
+import argparse
 
 _PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PLOT_DIR = os.path.join(_PROJECT_ROOT, "plots")
@@ -19,6 +20,7 @@ def train(
     max_steps_per_episode=1000,
     stack_size=4,
     seed=42,
+    lr=None,
 ):
     init_db()
     np.random.seed(seed)
@@ -28,6 +30,10 @@ def train(
 
     env = SnakeEnv(stack_size=stack_size)
     agent = DQNAgent(stack_size=stack_size)
+
+    if lr is not None: 
+        for param_group in agent.optimizer.param_groups: 
+            param_group["lr"] = lr
 
     experiment_id = create_experiment(
         model_version="v0.5.0",
@@ -176,4 +182,20 @@ def train(
 
 
 if __name__ == "__main__":
-    train(num_episodes=1000)
+    parser = argparse.ArgumentParser(description="Train DQN Snake Agent")
+
+    parser.add_argument("--episodes", type=int, default=1000)
+    parser.add_argument("--max-steps", type=int, default=1000)
+    parser.add_argument("--stack-size", type=int, default=4)
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--lr", type=float, default=None)
+
+    args = parser.parse_args()
+
+    train(
+        num_episodes=args.episodes,
+        max_steps_per_episode=args.max_steps,
+        stack_size=args.stack_size,
+        seed=args.seed,
+        lr=args.lr,
+    )
