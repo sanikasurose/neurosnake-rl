@@ -1,246 +1,227 @@
-# 🐍 neurosnake-rl - From Snake Game to Deep RL + Analytics Platform
+# neurosnake-rl 
 
-This project began as a simple implementation of the classic Snake game using Python’s Turtle graphics. It has since evolved into a fully autonomous Deep Reinforcement Learning system, and now into a structured experiment tracking and analytics platform.
+**From the classic Snake game → Deep Reinforcement Learning → Reproducible RL Research Pipeline**
 
-What started as a simple game is now:
+This project started as a simple Snake game and evolved into a **full reinforcement learning experimentation framework**.
 
-- A Deep Q-Network (DQN) implemented from scratch in PyTorch
-- A convolutional architecture for spatial reasoning over grid states
-- Frame stacking for temporal awareness and directional inference
-- A Double DQN implementation to reduce Q-value overestimation
-- Target network stabilization and replay buffer training
-- A reproducible experiment tracking and analytics framework
+The agent is trained with **Deep Q-Learning (DQN)** using a convolutional neural network and a structured experiment pipeline that enables **reproducible training, experiment tracking, and model evaluation**.
 
-This repository documents that progression; from deterministic game logic to stabilized deep value learning with analytical validation.
+The repository now functions as a **mini RL research lab**.
 
 ---
 
-# 🚀 Current Release: v0.5.0 — RL + Experiment Tracking + Analytics
+# 🚀 Current Version - v1.0.0
 
-Version 0.5.0 introduces structured experiment logging and analytical validation on top of the RL system.
+v1.0.0 marks the transition from **"training a model** to a **complete reinforcement learning experimentation pipeline**.
 
-This transforms the project from “just training a model” into a reproducible, analyzable ML experiment framework.
+The system now supports: 
 
----
+- reproducible experiments
+- experiment tracking
+- structured analysis
+- model checkpointing
+- deterministic evaluation
+- experiment leaderboards
+- CLI-controlled training runs
 
-# 🧠 Reinforcement Learning System (v0.4 Core)
-
-## Major Architectural Features
-
-- ✅ Convolutional Neural Network (CNN) for spatial reasoning  
-- ✅ Frame stacking for temporal awareness  
-- ✅ Double DQN (reduced Q-value overestimation)  
-- ✅ Target network stabilization  
-- ✅ Replay buffer (50,000 capacity)  
-- ✅ GPU-accelerated training (PyTorch + Apple MPS)  
-- ✅ Rolling-average performance tracking  
-- ✅ Structured training logs  
+This makes it possible to **run, compare, and analyze RL experiments systematically**.
 
 ---
 
-## 📈 Performance Evolution
+# 🧠 Reinforcement Learning System
 
-### v0.2.0 — MLP DQN
-- Plateaued at score **2–3**
-- No spatial modeling
-- Limited policy improvement
+The agent uses a **Deep Q-Network (DQN)** architecture designed for grid-based spatial reasoning.
 
-### v0.3.0 — CNN + Frame Stacking
-- Broke architectural ceiling
-- Strong performance spikes
-- Improved survival behavior
+Key features:
 
-### v0.4.0 — CNN + Frame Stacking + Double DQN
-- 4000 training episodes
-- Stable rolling average: **~2.4–2.7**
-- Best score: **11**
-- No Q-value divergence
-- Stable late-stage loss (~0.25–0.32)
+- Convolutional Neural Network (CNN)
+- Frame stacking for temporal awareness
+- Double DQN to reduce Q-value overestimation
+- Target network stabilization
+- Replay buffer training
+- Epsilon-greedy exploration
+- GPU acceleration via PyTorch
 
-This version emphasizes **correct learning dynamics over inflated Q-values**.
+Training optimizes the **Bellman error**:
 
-Q-values remain bounded and consistent with target estimates throughout training.
+`Loss = (Q_predicted − Q_target)²`
 
----
+With Double DQN targets: 
 
-# 🔁 Reinforcement Learning Loop
-
-Each episode:
-
-1. Reset environment  
-2. Observe stacked state  
-3. Choose action (epsilon-greedy)  
-4. Execute action  
-5. Receive reward  
-6. Store transition in replay buffer  
-7. Sample mini-batch  
-8. Update online network  
-9. Periodically update target network  
-
-Training minimizes the Bellman error:
-
-Loss = (Q_predicted − Q_target)²
-
-With Double DQN target computation:
-
-Q_target = r + γ * Q_target(s', argmax_a Q_online(s', a))
+`Loss = (Q_predicted − Q_target)²`
 
 ---
 
-# 🗄 v0.5 — Structured Experiment Tracking
+# 🔬 RL Experiment Pipeline
 
-Training runs are now stored in a relational SQLite database:
+The project now implements a **complete RL research workflow**.
 
-`training.db`
+`
+Train Agent
+↓
+Log Experiment (SQLite)
+↓
+Save Best Model Checkpoint
+↓
+Evaluate Models
+↓ 
+Rank Experiments (Leaderboard)
+↓
+Analyze Results
 
-## Database Design
+This enables **systematic RL experimentation instead of ad-hoc training runs**.
 
-### experiments
-- experiment_id
-- model_version
-- created_at
-- notes
+---
 
-### hyperparameters
-- experiment_id (FK)
-- learning_rate
+# 📊 Experiment Tracking & Analytics
+
+Experiments are stored in a **SQLite database**.
+
+Each run logs:
+
+- model version
+- learning rate
 - gamma
-- batch_size
-- epsilon_decay
-- etc.
+- epsilon schedule
+- batch size
+- seed
+- episode metrics
 
-### episodes
-- episode_id
-- experiment_id (FK)
-- episode_number
+Episode-level metrics include:
+
 - score
-- avg_loss
+- reward
+- loss
+- epsilon
+- Q-value statistics
 
-This enables:
+The analytics layer enables:
 
-- Reproducibility
-- Cross-experiment comparison
-- Hyperparameter impact analysis
-- Convergence detection
-- Data validation
-
----
-
-# 📊 SQL Analytics Layer
-
-The project now includes structured analytical queries:
-
-`analytics/queries.sql`
-
-Implemented concepts:
-
-- SELECT
-- JOIN
-- GROUP BY
-- HAVING
-- Aggregations
-- Window functions (rolling averages)
-
-Example analyses:
-
-- Average score by learning rate
-- Best performing experiment
-- Underperforming run detection
-- Rolling 10-episode moving averages
-- Convergence episode detection
+- experiment comparison
+- convergence detection
+- performance profiling
+- data integrity validation
 
 ---
 
-# 🧪 analyze.py — Data Profiling & Validation Layer
+# 🧪 Evaluation System
 
-`analytics/analyze.py` executes structured analytics directly against the database.
+The repo includes a **deterministic evaluation framework**.
 
-It performs:
+Features:
 
-## Dataset Profiling
-- Total experiments
-- Total episodes
-- Score distributions
-- Average episodes per experiment
+- evaluate individual checkpoints
+- batch evaluation of all trained models
+- automatic experiment leaderboard
 
-## Performance Summary
-- KPI reporting per experiment
-- Best-performing run detection
-- Hyperparameter comparisons
-
-## Convergence Detection
-- Window-function-based rolling average tracking
-- Threshold-based convergence identification
-
-## Data Integrity Checks
-- NULL detection
-- Orphaned records
-- Duplicate episode numbers
-- Experiments with zero episodes
-
-This simulates a lightweight analytics engineering workflow:
-
-- SQL validation
-- KPI reporting
-- Data quality checks
-- Structured reporting
-
-The project now resembles a mini data platform layered on top of an ML system.
+This allows **objective comparison between experiments**.
 
 ---
 
-# 📦 Libraries Used
+# ⚙️ Tech Stack
 
-## Python
-Core language.
+**Core ML**
 
-## NumPy
-Grid representation and numerical operations.
+- Python
+- PyTorch
+- NumPy
 
-## PyTorch
-- CNN architecture
-- Automatic differentiation
-- Adam optimizer
-- MPS GPU backend
+**Experiment Infrastructure**
 
-## SQLite
-- Structured experiment tracking
-- Relational schema design
-- Analytical querying
-- Data validation
+- SQLite
+- Structured experiment logging
+- Training analytics
+- CLI experiment control
 
-## Turtle (v0.1)
-Original rendering engine.
+**Visualization**
+
+- Matplotlib
+
+**Original Game**
+
+- Python Turtle (v0.1)
+
+---
+
+# 📂 Project Structure
+
+snake-ai/
+│
+├── snake_env.py
+│
+├── rl/
+│ ├── agent.py
+│ ├── train.py
+│ ├── evaluate.py
+│ └── evaluate_all.py
+│
+├── analytics/
+│ └── db.py
+│
+├── models/
+├── plots/
+└── experiments.db
+
+---
+
+# 🧭 Why I Built This
+
+Most reinforcement learning tutorials stop at **“the model trains.”**
+
+Real ML systems require much more:
+
+- reproducibility
+- experiment tracking
+- evaluation pipelines
+- structured analysis
+
+This project explores **what it takes to turn an RL agent into a research workflow**.
+
+It bridges three areas:
+
+- reinforcement learning
+- machine learning engineering
+- analytics engineering
+
+---
+
+# 📚 What I Learned
+
+Building this project required understanding:
+
+**Reinforcement Learning**
+- DQN and Double DQN
+- value stabilization
+- replay buffer training
+- exploration strategies
+
+**Machine Learning Engineering**
+- experiment reproducibility
+- checkpoint management
+- deterministic evaluation
+- structured training pipelines
+
+**Data & Analytics**
+- relational schema design
+- experiment logging
+- SQL analytics
+- dataset validation
 
 ---
 
 # 🏷 Version History
 
-- **v0.1** — Manual Snake (Turtle)
+- **v0.1** — Snake game (Turtle)
 - **v0.2** — Basic MLP DQN
 - **v0.3** — CNN + Frame Stacking
-- **v0.4** — CNN + Frame Stacking + Double DQN
-- **v0.5** — Experiment Database + SQL Analytics + Data Validation
+- **v0.4** — Double DQN stabilization
+- **v0.5** — Experiment database + SQL analytics
+- **v1.0** — Full RL experimentation pipeline
 
 ---
 
-# 🏁 Why This Project Matters
+# 🎯 Project Goal
 
-This project demonstrates:
+The goal of this repository is not just to build a working RL agent, but to demonstrate **how to structure reinforcement learning experiments like a research project**.
 
-- Implementing DQN and Double DQN from scratch
-- Understanding architectural stabilization
-- Designing a relational schema for ML experiments
-- Writing analytical SQL with window functions
-- Performing data profiling and validation
-- Structuring experiments for reproducibility
-
-It evolved from a simple game to:
-
-- Applied reinforcement learning
-- Experiment tracking infrastructure
-- Analytical SQL practice
-- Data validation engineering
-
-It bridges machine learning and data engineering by turning a learning system into a measurable, analyzable platform.
-
+The result is a small but complete **reinforcement learning experimentation platform** built from scratch.

@@ -31,15 +31,15 @@ def init_db():
     print("Database initialized successfully.")
 
 
-def create_experiment(model_version, learning_rate, gamma, epsilon_start, epsilon_decay, batch_size):
+def create_experiment(model_version, learning_rate, gamma, epsilon_start, epsilon_decay, batch_size, notes=None):
     conn = _connect()
 
     try:
         timestamp = datetime.now(timezone.utc).isoformat()
 
         cursor = conn.execute(
-            "INSERT INTO experiments (model_version, architecture, start_time) VALUES (?, ?, ?)",
-            (model_version, "DQN", timestamp),
+            "INSERT INTO experiments (model_version, architecture, start_time, notes) VALUES (?, ?, ?, ?)",
+            (model_version, "DQN", timestamp, notes),
         )
         experiment_id = cursor.lastrowid
 

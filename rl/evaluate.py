@@ -1,11 +1,4 @@
-"""Deterministic evaluation of a trained DQN Snake agent.
-
-Loads a saved policy-network checkpoint and runs greedy (argmax Q) episodes
-with no exploration, no replay-buffer updates, and no training.
-
-Usage:
-    python -m rl.evaluate --model models/exp_3_best.pth --episodes 50
-"""
+"""Deterministic evaluation of a trained DQN Snake agent."""
 
 import argparse
 import os
@@ -25,7 +18,7 @@ def evaluate(
     seed: int,
     verbose: bool = True,
 ) -> list[int]:
-    """Run deterministic greedy evaluation and return per-episode scores."""
+
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -38,29 +31,56 @@ def evaluate(
 
     state_dict = torch.load(model_path, map_location=agent.device)
     agent.policy_net.load_state_dict(state_dict)
+
     agent.policy_net.eval()
     agent.epsilon = 0.0
+
+    expected_channels = 2 * stack_size
 
     scores: list[int] = []
 
     for ep in range(num_episodes):
+
         state = env.reset()
         done = False
 
-        while not done:
-            state_t = torch.as_tensor(state, dtype=torch.float32, device=agent.device).unsqueeze(0)
-            state_t = state_t.unsqueeze(0).to(agent.device)
+        max_steps = 500
+        steps = 0
+
+        while not done and steps < max_steps:
+
+            steps += 1
+
+            state_t = torch.as_tensor(
+                state,
+                dtype=torch.float32,
+                device=agent.device,
+            ).unsqueeze(0)
+
+            assert state_t.shape == (
+                1,
+                expected_channels,
+                env.grid_size,
+                env.grid_size,
+            )
+
             with torch.no_grad():
                 action = agent.policy_net(state_t).argmax(dim=1).item()
+
             state, _, done = env.step(action)
 
         scores.append(env.score)
+
         if verbose:
-            print(f"Episode {ep + 1:>{len(str(num_episodes))}}/{num_episodes}  "
-                  f"Score: {env.score}")
+            print(
+                f"Episode {ep+1}/{num_episodes} "
+                f"Score: {env.score} "
+                f"Steps: {steps}"
+            )
 
     if verbose:
         avg_score = sum(scores) / len(scores)
+
         print("\n--- Evaluation Results ---")
         print(f"Episodes : {num_episodes}")
         print(f"Avg Score: {avg_score:.2f}")
@@ -71,29 +91,38 @@ def evaluate(
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Evaluate a trained DQN Snake agent",
-    )
+
+    parser = argparse.ArgumentParser()
+
     parser.add_argument(
-        "--model", type=str, required=True,
-        help="Path to the saved model checkpoint (.pth)",
+        "--model",
+        type=str,
+        required=True,
+        help="Path to model checkpoint",
     )
+
     parser.add_argument(
-        "--episodes", type=int, default=50,
-        help="Number of evaluation episodes (default: 50)",
+        "--episodes",
+        type=int,
+        default=50,
     )
+
     parser.add_argument(
-        "--stack-size", type=int, default=4,
-        help="Frame-stack size matching the trained model (default: 4)",
+        "--stack-size",
+        type=int,
+        default=4,
     )
+
     parser.add_argument(
-        "--seed", type=int, default=42,
-        help="Random seed for reproducibility (default: 42)",
+        "--seed",
+        type=int,
+        default=42,
     )
+
     args = parser.parse_args()
 
     if not os.path.isfile(args.model):
-        raise FileNotFoundError(f"Model checkpoint not found: {args.model}")
+        raise FileNotFoundError(args.model)
 
     evaluate(
         model_path=args.model,
