@@ -11,9 +11,7 @@ __pycache__/
 # Model Weights
 *.pth
 models/
-
-# Training logs
-training_log_*.csv
+plots/
 
 # SQLite databases
 *.db
