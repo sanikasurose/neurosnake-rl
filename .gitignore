@@ -18,3 +18,5 @@ plots/
 
 # Virtual Environment
 .venv/
+
+.claude/
